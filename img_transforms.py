@@ -4,10 +4,13 @@ Written By: Anders Ohrn, October 2020
 
 '''
 from enum import Enum
+
 from torchvision import transforms
+
 
 class GridMakerError(Exception):
     pass
+
 
 class ZScoreConsts(Enum):
     '''Mean value to use for standard Z-score normalization, taken from https://pytorch.org/docs/stable/torchvision/models.html'''
@@ -29,6 +32,7 @@ class StandardTransform(object):
         norm_std : std value for normalization of the R,G,B channels
 
     '''
+
     def __init__(self, min_dim=300, to_tensor=True, square=False,
                  normalize=True, norm_mean=ZScoreConsts.Z_MEAN.value, norm_std=ZScoreConsts.Z_STD.value):
 
@@ -55,6 +59,7 @@ class UnNormalizeTransform(object):
         norm_std : std value for normalization of the R,G,B channels
 
     '''
+
     def __init__(self, norm_mean=ZScoreConsts.Z_MEAN.value, norm_std=ZScoreConsts.Z_STD.value):
         self.transform_total = transforms.Normalize(mean=[-m / s for m, s in zip(norm_mean, norm_std)],
                                                     std=[1.0 / s for s in norm_std])
@@ -78,6 +83,7 @@ class DataAugmentTransform(object):
         norm_std : std value for normalization of the R,G,B channels
 
     '''
+
     def __init__(self, augmentation_label, min_dim=300, to_tensor=True, square=False,
                  normalize=True, norm_mean=ZScoreConsts.Z_MEAN.value, norm_std=ZScoreConsts.Z_STD.value):
 
@@ -86,7 +92,7 @@ class DataAugmentTransform(object):
             ts.append(transforms.CenterCrop(min_dim))
 
         if augmentation_label == 'random_resized_crop':
-            ts.append(transforms.RandomResizedCrop((min_dim, int(min_dim * 1.5)), scale=(0.67,1.0)))
+            ts.append(transforms.RandomResizedCrop((min_dim, int(min_dim * 1.5)), scale=(0.67, 1.0)))
         elif augmentation_label == 'random_rotation':
             ts.append(transforms.RandomRotation(180.0))
         elif augmentation_label == 'random_resized_crop_rotation':
@@ -124,11 +130,13 @@ class OverlapGridTransform(object):
         GridMakerError: In case the grid cropping specifications are not adding up
 
     '''
+
     def __init__(self, img_input_dim=224, img_n_splits=6, crop_step_size=32, crop_dim=64,
                  norm_mean=ZScoreConsts.Z_MEAN.value, norm_std=ZScoreConsts.Z_STD.value):
 
         if not crop_dim + (img_n_splits - 1) * crop_step_size == img_input_dim:
-            raise GridMakerError('Image grid crop not possible: crop_dim + (img_n_splits - 1) * crop_step_size != img_input_dim')
+            raise GridMakerError(
+                'Image grid crop not possible: crop_dim + (img_n_splits - 1) * crop_step_size != img_input_dim')
 
         # Transformations of the source image: To PIL Image -> Resize shortest dimension -> Crop square at centre
         pre_transforms = []
@@ -148,10 +156,10 @@ class OverlapGridTransform(object):
         w_indices = range(img_n_splits)
         for h in h_indices:
             for w in w_indices:
-                self.kwargs.append({'top' : h * crop_step_size,
-                                    'left' : w * crop_step_size,
-                                    'height' : crop_dim,
-                                    'width' : crop_dim})
+                self.kwargs.append({'top': h * crop_step_size,
+                                    'left': w * crop_step_size,
+                                    'height': crop_dim,
+                                    'width': crop_dim})
 
         self.n_blocks = len(self.kwargs)
 

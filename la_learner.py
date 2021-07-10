@@ -4,13 +4,14 @@ Written by: Anders Ohrn, October 2020
 
 '''
 import sys
-import numpy as np
 
+import numpy as np
 import torch
 
 from _learner import _Learner, progress_bar
-from cluster_utils import MemoryBank, LocalAggregationLoss
-from ae_deep import EncoderVGGMerged, AutoEncoderVGG
+from ae_deep import AutoEncoderVGG, EncoderVGGMerged
+from cluster_utils import LocalAggregationLoss, MemoryBank
+
 
 class LALearner(_Learner):
     '''Local Aggregation Learner class applied to the fungi image dataset for clustering of images
@@ -19,19 +20,20 @@ class LALearner(_Learner):
         To be written
 
     '''
+
     def __init__(self, run_label='', random_seed=None, f_out=sys.stdout,
-                       raw_csv_toc=None, raw_csv_root=None,
-                       save_tmp_name='model_in_training',
-                       selector=None, iselector=None,
-                       dataset_type='full basic idx',
-                       loader_batch_size=16, num_workers=0,
-                       show_batch_progress=True, deterministic=True,
-                       lr_init=0.01, momentum=0.9,
-                       scheduler_step_size=15, scheduler_gamma=0.1,
-                       k_nearest_neighbours=None, clustering_repeats=None, number_of_centroids=None,
-                       temperature=None, memory_mixing=None, n_samples=None,
-                       code_merger='mean',
-                       img_input_dim=224, img_n_splits=6, crop_step_size=32, crop_dim=64):
+                 raw_csv_toc=None, raw_csv_root=None,
+                 save_tmp_name='model_in_training',
+                 selector=None, iselector=None,
+                 dataset_type='full basic idx',
+                 loader_batch_size=16, num_workers=0,
+                 show_batch_progress=True, deterministic=True,
+                 lr_init=0.01, momentum=0.9,
+                 scheduler_step_size=15, scheduler_gamma=0.1,
+                 k_nearest_neighbours=None, clustering_repeats=None, number_of_centroids=None,
+                 temperature=None, memory_mixing=None, n_samples=None,
+                 code_merger='mean',
+                 img_input_dim=224, img_n_splits=6, crop_step_size=32, crop_dim=64):
 
         dataset_kwargs = {'img_input_dim': img_input_dim, 'img_n_splits': img_n_splits,
                           'crop_step_size': crop_step_size, 'crop_dim': crop_dim}
@@ -58,7 +60,7 @@ class LALearner(_Learner):
 
         self.model = EncoderVGGMerged(merger_type=code_merger)
         memory_bank = MemoryBank(n_vectors=n_samples, dim_vector=self.model.channels_code,
-                                      memory_mixing_rate=self.inp_memory_mixing)
+                                 memory_mixing_rate=self.inp_memory_mixing)
         self.criterion = LocalAggregationLoss(memory_bank=memory_bank,
                                               temperature=self.inp_temperature,
                                               k_nearest_neighbours=self.inp_k_nearest_neighbours,
@@ -169,4 +171,3 @@ class LALearner(_Learner):
                 all_output = np.append(all_output, output.detach().numpy(), axis=0)
 
         return clusterer(all_output, **clusterer_kwargs)
-

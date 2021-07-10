@@ -3,19 +3,19 @@
 Written By: Anders Ohrn, September 2020
 
 '''
-import torch
-from torch import nn
-import torch.nn.functional as F
-
 import numpy as np
-
-from sklearn.neighbors import NearestNeighbors
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import normalize
+import torch
+import torch.nn.functional as F
 from scipy.spatial.distance import cosine as cosine_distance
+from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import normalize
+from torch import nn
+
 
 class VectorUpdateError(Exception):
     pass
+
 
 def marsaglia(sphere_dim):
     '''Method to generate a point uniformly distributed on the (N-1) sphere by Marsaglia
@@ -26,6 +26,7 @@ def marsaglia(sphere_dim):
     '''
     norm_vals = np.random.standard_normal(sphere_dim)
     return norm_vals / np.linalg.norm(norm_vals)
+
 
 class MemoryBank(object):
     '''Memory bank
@@ -38,6 +39,7 @@ class MemoryBank(object):
             set during calling `update_memory`.
 
     '''
+
     def __init__(self, n_vectors, dim_vector, memory_mixing_rate=None):
 
         self.dim_vector = dim_vector
@@ -99,6 +101,7 @@ class LocalAggregationLoss(nn.Module):
     Zhuang, Zhai and Yamins (2019), arXiv:1903.12355v2
 
     '''
+
     def __init__(self, temperature,
                  k_nearest_neighbours, clustering_repeats, number_of_centroids,
                  memory_bank,
@@ -270,6 +273,7 @@ class ClusterHardnessLoss(nn.Module):
             to pass to an optimizer for optimization.
 
     '''
+
     def __init__(self, cc_init, batch_reduction=True):
         super(ClusterHardnessLoss, self).__init__()
 
@@ -328,13 +332,13 @@ class ClusterHardnessLoss(nn.Module):
                              'not identical to dimension of old cluster centres {}'.format(self.cluster_centres.shape))
         self.cluster_centres.data = c_new.data
 
-def test1():
 
+def test1():
     from torch import autograd
 
     # Compute module for dummy input
-    z = [[1,3,0], [1,2,0], [0,0,3]]
-    m = [[2,2,0], [0,0,2]]
+    z = [[1, 3, 0], [1, 2, 0], [0, 0, 3]]
+    m = [[2, 2, 0], [0, 0, 2]]
     t1 = torch.tensor(z, dtype=torch.float64, requires_grad=True)
     t2 = torch.tensor(m, dtype=torch.float64, requires_grad=True)
     tester = ClusterHardnessLoss(t2)
@@ -344,7 +348,7 @@ def test1():
     aa = []
     for zz in z:
         for mm in m:
-            aa.append(1.0 / (1.0 + np.linalg.norm(np.array(zz) - np.array(mm))**2))
+            aa.append(1.0 / (1.0 + np.linalg.norm(np.array(zz) - np.array(mm)) ** 2))
     norm_aa = [aa[0] + aa[1], aa[2] + aa[3], aa[4] + aa[5]]
     qij = [aa[0] / norm_aa[0], aa[1] / norm_aa[0],
            aa[2] / norm_aa[1], aa[3] / norm_aa[1],

@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from torchvision import models
 
+
 class EncoderVGG(nn.Module):
     '''Encoder of image based on the architecture of VGG-16 with batch normalization.
 
@@ -67,8 +68,8 @@ class EncoderVGG(nn.Module):
                 code. If True it will. For actual applications, this value should be True.
 
         '''
-        value = img_dim / 2**5
-        int_value = img_dim % 2**5 == 0
+        value = img_dim / 2 ** 5
+        int_value = img_dim % 2 ** 5 == 0
         return value, int_value
 
     def _encodify_(self, encoder):
@@ -165,17 +166,17 @@ class DecoderVGG(nn.Module):
         for module in reversed(encoder):
 
             if isinstance(module, nn.Conv2d):
-                kwargs = {'in_channels' : module.out_channels, 'out_channels' : module.in_channels,
-                          'kernel_size' : module.kernel_size, 'stride' : module.stride,
-                          'padding' : module.padding}
+                kwargs = {'in_channels': module.out_channels, 'out_channels': module.in_channels,
+                          'kernel_size': module.kernel_size, 'stride': module.stride,
+                          'padding': module.padding}
                 module_transpose = nn.ConvTranspose2d(**kwargs)
                 module_norm = nn.BatchNorm2d(module.in_channels)
                 module_act = nn.ReLU(inplace=True)
                 modules_transpose += [module_transpose, module_norm, module_act]
 
             elif isinstance(module, nn.MaxPool2d):
-                kwargs = {'kernel_size' : module.kernel_size, 'stride' : module.stride,
-                          'padding' : module.padding}
+                kwargs = {'kernel_size': module.kernel_size, 'stride': module.stride,
+                          'padding': module.padding}
                 module_transpose = nn.MaxUnpool2d(**kwargs)
                 modules_transpose += [module_transpose]
 
@@ -245,7 +246,8 @@ class AutoEncoderVGG(nn.Module):
 
         '''
         if not (encoder_or_decoder == 'encoder' or encoder_or_decoder == 'decoder'):
-            raise ValueError('State dictionary mutation only for "encoder" or "decoder", not {}'.format(encoder_or_decoder))
+            raise ValueError(
+                'State dictionary mutation only for "encoder" or "decoder", not {}'.format(encoder_or_decoder))
 
         keys = list(ae_state_dict)
         for key in keys:
@@ -294,6 +296,7 @@ class EncoderVGGMerged(EncoderVGG):
             Defaults to True.
 
     '''
+
     def __init__(self, merger_type=None, pretrained_params=True):
         super(EncoderVGGMerged, self).__init__(pretrained_params=pretrained_params)
 
@@ -302,10 +305,10 @@ class EncoderVGGMerged(EncoderVGG):
             self.code_post_process_kwargs = {}
         elif merger_type == 'mean':
             self.code_post_process = torch.mean
-            self.code_post_process_kwargs = {'dim' : (-2, -1)}
+            self.code_post_process_kwargs = {'dim': (-2, -1)}
         elif merger_type == 'flatten':
             self.code_post_process = torch.flatten
-            self.code_post_process_kwargs = {'start_dim' : 1, 'end_dim' : -1}
+            self.code_post_process_kwargs = {'start_dim': 1, 'end_dim': -1}
         else:
             raise ValueError('Unknown merger type for the encoder code: {}'.format(merger_type))
 

@@ -5,23 +5,24 @@ The `_Learner` class should be inherited by any specific model learner, such as 
 Written by: Anders Ohrn, October 2020
 
 '''
+import abc
 import sys
 import time
-import abc
-
-from numpy.random import seed, randint
 
 import torch
-from torch.utils.data import DataLoader
+from numpy.random import randint, seed
 from torch import optim
+from torch.utils.data import DataLoader
 
 import fungidata
+
 
 class LearnerInterface(metaclass=abc.ABCMeta):
     '''Formal interface for the Learner subclasses. Any class inheriting `_Learner` will have to satisfy this
     interface, otherwise it will not instantiate
 
     '''
+
     @classmethod
     def __subclasshook__(cls, subclass):
         return (hasattr(subclass, 'train') and
@@ -65,13 +66,13 @@ class _Learner(LearnerInterface):
     STATE_KEY_SAVE = 'model_state'
 
     def __init__(self, run_label='', random_seed=None, f_out=sys.stdout,
-                       raw_csv_toc=None, raw_csv_root=None,
-                       save_tmp_name='model_in_training',
-                       selector=None, iselector=None,
-                       dataset_type='full basic', dataset_kwargs={},
-                       loader_batch_size=16, num_workers=0,
-                       show_batch_progress=True, deterministic=True,
-                       epoch_conclude_func=None):
+                 raw_csv_toc=None, raw_csv_root=None,
+                 save_tmp_name='model_in_training',
+                 selector=None, iselector=None,
+                 dataset_type='full basic', dataset_kwargs={},
+                 loader_batch_size=16, num_workers=0,
+                 show_batch_progress=True, deterministic=True,
+                 epoch_conclude_func=None):
 
         self.inp_run_label = run_label
         self.inp_random_seed = random_seed
@@ -95,7 +96,7 @@ class _Learner(LearnerInterface):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         seed(self.inp_random_seed)
-        torch.manual_seed(randint(2**63))
+        torch.manual_seed(randint(2 ** 63))
         if self.inp_deterministic:
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
@@ -115,7 +116,7 @@ class _Learner(LearnerInterface):
         self.lr_scheduler = None
 
     def set_sgd_optim(self, parameters, lr=0.01, momentum=0.9, weight_decay=0.0,
-                            scheduler_step_size=15, scheduler_gamma=0.1):
+                      scheduler_step_size=15, scheduler_gamma=0.1):
         '''Override the `optimizer` and `lr_scheduler` attributes with an SGD optimizer and an exponential decay
         learning rate.
 
@@ -133,8 +134,8 @@ class _Learner(LearnerInterface):
         '''
         self.optimizer = optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
         self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer,
-                                                          step_size=scheduler_step_size,
-                                                          gamma=scheduler_gamma)
+                                                      step_size=scheduler_step_size,
+                                                      gamma=scheduler_gamma)
 
     def print_inp(self):
         '''Output input parameters for easy reference in future. Based on naming variable naming convention.
@@ -155,4 +156,4 @@ def progress_bar(current, total, barlength=20):
     percent = float(current) / total
     arrow = '-' * int(percent * barlength - 1) + '>'
     spaces = ' ' * (barlength - len(arrow))
-    print ('\rProgress: [{}{}]'.format(arrow, spaces), end='')
+    print('\rProgress: [{}{}]'.format(arrow, spaces), end='')

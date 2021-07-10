@@ -3,43 +3,42 @@
 NOT FUNCTIONAL, INCLUDED AS LEGACY. REFER TO SEPARATE RUN SCRIPTS, LIKE la_runs.py
 
 '''
+import copy
 import sys
 import time
-import copy
-import numpy as np
-from numpy.random import shuffle, seed
-from sklearn.metrics import confusion_matrix
 
+import numpy as np
 import torch
-from torchvision.utils import save_image
-from torch.utils.data import DataLoader, ConcatDataset
+from captum.attr import IntegratedGradients
+from captum.attr import NoiseTunnel
+from captum.attr import Occlusion
+from captum.attr import visualization as viz
+from fungiimg import DataAugmentTransform, FungiImg, RawData, StandardTransform
+from matplotlib.colors import LinearSegmentedColormap
+from numpy.random import seed, shuffle
+from sklearn.metrics import confusion_matrix
 from torch import nn
 from torch import optim
+from torch.utils.data import ConcatDataset, DataLoader
+from torchvision.utils import save_image
 
-from captum.attr import IntegratedGradients
-from captum.attr import GradientShap
-from captum.attr import Occlusion
-from captum.attr import NoiseTunnel
-from captum.attr import visualization as viz
-
-from matplotlib.colors import LinearSegmentedColormap
-
-from fungiimg import FungiImg, RawData, StandardTransform, DataAugmentTransform
 from ic_template_models import initialize_model
+
 
 class Runner(object):
     '''Super class that defines dataset, model and optimizer for training and parameter tuning.
     A helpful wrapper
 
     '''
+
     def __init__(self, run_label='Fungi Standard Run', random_seed=42, f_out=sys.stdout,
-                       raw_csv_toc='toc_full.csv', raw_csv_root='.',
-                       transform_imgs='standard_300',
-                       transforms_aug_train=['random_resized_crop'],
-                       label_key='Kantarell vs Fluesvamp',
-                       f_test=0.10,
-                       loader_batch_size=8, num_workers=0,
-                       model_label='inception_v3', use_pretrained=True, feature_extract=False):
+                 raw_csv_toc='toc_full.csv', raw_csv_root='.',
+                 transform_imgs='standard_300',
+                 transforms_aug_train=['random_resized_crop'],
+                 label_key='Kantarell vs Fluesvamp',
+                 f_test=0.10,
+                 loader_batch_size=8, num_workers=0,
+                 model_label='inception_v3', use_pretrained=True, feature_extract=False):
 
         self.inp_run_label = run_label
         self.inp_random_seed = random_seed
@@ -104,8 +103,8 @@ class Runner(object):
         test_ids = all_ids[:n_test]
         train_ids = all_ids[n_test:]
         self.dataset_test = FungiImg(csv_file=self.inp_raw_csv_toc, root_dir=self.inp_raw_csv_root,
-                                iselector=test_ids, transform=transform,
-                                label_keys=label_keys)
+                                     iselector=test_ids, transform=transform,
+                                     label_keys=label_keys)
         dataset_train_all = [FungiImg(csv_file=raw_csv_toc, root_dir=raw_csv_root,
                                       iselector=train_ids, transform=transform,
                                       label_keys=label_keys)]
@@ -124,11 +123,11 @@ class Runner(object):
         #
         # Create the data loaders for training and testing
         #
-        self.dataloaders = {'train' : DataLoader(self.dataset_train, batch_size=loader_batch_size,
-                                                 shuffle=True, num_workers=num_workers),
-                            'test' : DataLoader(self.dataset_test, batch_size=loader_batch_size,
-                                                shuffle=False, num_workers=num_workers)}
-        self.dataset_sizes = {'train' : len(self.dataset_train), 'test' : len(self.dataset_test)}
+        self.dataloaders = {'train': DataLoader(self.dataset_train, batch_size=loader_batch_size,
+                                                shuffle=True, num_workers=num_workers),
+                            'test': DataLoader(self.dataset_test, batch_size=loader_batch_size,
+                                               shuffle=False, num_workers=num_workers)}
+        self.dataset_sizes = {'train': len(self.dataset_train), 'test': len(self.dataset_test)}
 
         #
         # Define the model
@@ -344,7 +343,7 @@ class Runner(object):
             ["all", "positive"],
             show_colorbar=True,
             outlier_perc=2,
-            )
+        )
 
     def _attr_noise_tunnel(self, input, pred):
 
@@ -363,12 +362,14 @@ class Runner(object):
             cmap=default_cmap,
             show_colorbar=True)
 
+
 def test1():
     r1 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=None)
     r1.print_inp()
     r1.train_model(1)
     r1.save_model_state('test')
+
 
 def test2():
     r2 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
@@ -377,7 +378,7 @@ def test2():
                 loader_batch_size=32,
                 model_label='inception_v3', label_key='Champignon vs Fluesvamp')
     r2.print_inp()
-    print (r2.dataset_sizes)
+    print(r2.dataset_sizes)
     r2.train_model(21)
     r2.save_model_state('save_champ_binary_aug1_inception_1')
 
@@ -387,67 +388,73 @@ def test2():
                 loader_batch_size=32,
                 model_label='inception_v3', label_key='Champignon vs Fluesvamp')
     r2.print_inp()
-    print (r2.dataset_sizes)
+    print(r2.dataset_sizes)
     r2.train_model(21)
     r2.save_model_state('save_champ_binary_noaug_inception_1')
+
 
 def test3():
     r3 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=[], f_test=0.15,
                 model_label='vgg', label_key='Kantarell vs Fluesvamp')
-    print (r3.dataset_sizes)
-    print (r3.dataset_test.label_semantics)
+    print(r3.dataset_sizes)
+    print(r3.dataset_test.label_semantics)
     r3.load_model_state('save_kant_binary_noaug_vgg16_21epoch')
     matrix, mismatch = r3.confusion_matrix()
-    print (matrix)
-    print (mismatch)
-    print (r3.dataset_test.img_toc.iloc[mismatch])
+    print(matrix)
+    print(mismatch)
+    print(r3.dataset_test.img_toc.iloc[mismatch])
     for mis_idx in mismatch:
         save_image(r3.dataset_test[mis_idx][0], 'fail_{}.png'.format(mis_idx))
+
 
 def test4():
     r4 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=[], f_test=0.15,
                 model_label='alexnet', label_key='Kantarell vs Fluesvamp')
     r4.print_inp()
-    print (r4.dataset_sizes)
+    print(r4.dataset_sizes)
     r4.train_model(21)
     r4.save_model_state('save_kant_binary_noaug_alex_21epoch')
     m1, m2 = r4.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 def test5():
-     r5 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
+    r5 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=[], f_test=0.15,
                 model_label='alexnet', label_key='Kantarell vs Fluesvamp')
-     r5.load_model_state('save_kant_binary_augresizecrop_alex_21epoch')
-     m1, m2 = r5.confusion_matrix()
-     print (m1)
-     print (m2)
-     print ([r5.dataset_test.img_toc.iloc[m2]])
-     r5.attribution_idx_(287, 'occlusion', occlusion_size=30)
+    r5.load_model_state('save_kant_binary_augresizecrop_alex_21epoch')
+    m1, m2 = r5.confusion_matrix()
+    print(m1)
+    print(m2)
+    print([r5.dataset_test.img_toc.iloc[m2]])
+    r5.attribution_idx_(287, 'occlusion', occlusion_size=30)
+
 
 def test6():
     r6 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=['random_resized_crop'], f_test=0.15,
                 model_label='alexnet', label_key='Kantarell vs Fluesvamp')
     r6.print_inp()
-    print (r6.dataset_sizes)
+    print(r6.dataset_sizes)
     r6.train_model(21)
     r6.save_model_state('save_kant_binary_augresizecrop_alex_21epoch')
     m1, m2 = r6.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 def test7():
     r7 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=['random_resized_crop'], f_test=0.15,
                 model_label='resnext', label_key='Kantarell vs Fluesvamp', feature_extract=False)
     r7.print_inp()
-    print (r7.dataset_sizes)
+    print(r7.dataset_sizes)
     r7.train_model(21)
     r7.save_model_state('save_kant_binary_augresizecrop_resnext_21epoch')
     m1, m2 = r7.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 def test8():
     r8 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
@@ -457,7 +464,7 @@ def test8():
     r8.train_model(21)
     r8.save_model_state('save_kant_binary_augresize_crop_inception_feature_21epoch')
     m1, m2 = r8.confusion_matrix()
-    print (m1)
+    print(m1)
     r8 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
                 transforms_aug_train=['random_resized_crop'], f_test=0.15,
                 model_label='inception_v3', label_key='Kantarell vs Fluesvamp', feature_extract=False)
@@ -465,7 +472,8 @@ def test8():
     r8.train_model(21)
     r8.save_model_state('save_kant_binary_augresize_crop_inception_21epoch')
     m1, m2 = r8.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 def test9():
     r9 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
@@ -475,20 +483,22 @@ def test9():
     r9.train_model(21)
     r9.save_model_state('save_kant_species_augresize_crop_inception_21epoch_2')
     m1, m2 = r9.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 def test10():
     r10 = Runner(raw_csv_toc='../../Desktop/Fungi/toc_full.csv', raw_csv_root='../../Desktop/Fungi',
-                transforms_aug_train=['random_resized_crop'], f_test=0.15, random_seed=9901,
-                model_label='resnet101', label_key='Kantarell Species', feature_extract=False)
+                 transforms_aug_train=['random_resized_crop'], f_test=0.15, random_seed=9901,
+                 model_label='resnet101', label_key='Kantarell Species', feature_extract=False)
     r10.print_inp()
     r10.train_model(21)
     r10.save_model_state('save_kant_species_augresize_crop_resnet101_21epoch')
     m1, m2 = r10.confusion_matrix()
-    print (m1)
+    print(m1)
+
 
 test2()
-#test3()
-#test6()
-#test8()
-#test10()
+# test3()
+# test6()
+# test8()
+# test10()

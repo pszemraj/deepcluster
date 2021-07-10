@@ -8,6 +8,7 @@ By: Anders Ohrn, September 2020
 from torch import nn
 from torchvision import models
 
+
 def initialize_model(label, num_classes, use_pretrained=True, feature_extracting=False):
     '''Retrieve template model for image recognition and substitute the output layer with
     suitable replacement. Note that the substitution requires knowledge of how the model names its output layer.
@@ -77,6 +78,7 @@ def initialize_model(label, num_classes, use_pretrained=True, feature_extracting
         raise ValueError('Template model with label {} not defined'.format(label))
 
     return model, input_size
+
 
 def set_parameter_requires_grad(model, feature_extracting):
     '''If do feature extraction, set gradients to false'''

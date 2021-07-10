@@ -4,11 +4,13 @@ Written by: Anders Ohrn, October 2020
 
 '''
 import sys
+
 import torch
 from torch import nn
 
 from _learner import _Learner, progress_bar
 from ic_template_models import initialize_model
+
 
 class ICLearner(_Learner):
     '''Image Classifier Learner class applied to the fungi image dataset for clustering of images
@@ -17,19 +19,20 @@ class ICLearner(_Learner):
         To be written
 
     '''
+
     def __init__(self, run_label='', random_seed=None, f_out=sys.stdout,
-                       raw_csv_toc=None, raw_csv_root=None,
-                       save_tmp_name='model_in_training',
-                       selector=None, iselector=None,
-                       dataset_type='full basic labelled',
-                       loader_batch_size=16, num_workers=0,
-                       show_batch_progress=True, deterministic=True,
-                       lr_init=0.01, momentum=0.9,
-                       scheduler_step_size=15, scheduler_gamma=0.1,
-                       ic_model='vgg',
-                       label_keys=None, min_dim=224, square=False,
-                       aug_multiplicity=1, aug_label='random_resized_crop_rotation',
-                       test_dataloader=None, test_datasetsize=None):
+                 raw_csv_toc=None, raw_csv_root=None,
+                 save_tmp_name='model_in_training',
+                 selector=None, iselector=None,
+                 dataset_type='full basic labelled',
+                 loader_batch_size=16, num_workers=0,
+                 show_batch_progress=True, deterministic=True,
+                 lr_init=0.01, momentum=0.9,
+                 scheduler_step_size=15, scheduler_gamma=0.1,
+                 ic_model='vgg',
+                 label_keys=None, min_dim=224, square=False,
+                 aug_multiplicity=1, aug_label='random_resized_crop_rotation',
+                 test_dataloader=None, test_datasetsize=None):
 
         dataset_kwargs = {'label_keys': label_keys, 'min_dim': min_dim, 'square': square,
                           'aug_multiplicity': aug_multiplicity, 'aug_label': aug_label}

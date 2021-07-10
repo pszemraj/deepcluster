@@ -1,13 +1,14 @@
 '''Helper script to make CSV with data annotations
 
 '''
-import sys
-import os
-import pandas as pd
 import argparse
+import os
+import sys
+
+import pandas as pd
+
 
 def parse_cmd(cmd_line):
-
     parser = argparse.ArgumentParser(description='Generate Image Meta Data')
     parser.add_argument('--img-root', dest='img_root',
                         help='Path to image folders root')
@@ -18,11 +19,12 @@ def parse_cmd(cmd_line):
 
     return args.img_root, args.out
 
+
 def dir_content(path):
     return [x for x in os.listdir(path) if x[0] != '.']
 
-def main(args):
 
+def main(args):
     file_root, out_path = parse_cmd(args)
     df_start = pd.read_csv('{}/toc.csv'.format(file_root))
     df_start = df_start.iloc[:, 1:]
@@ -48,7 +50,7 @@ def main(args):
                 df_1 = pd.concat([img_details, fungi_higher], axis=1)
                 new_index = df_1.columns.drop(['ImageName'])
                 df_expanded = df_1.set_index(list(new_index.to_numpy()), append=True)
-                df_expanded = df_expanded.reorder_levels([3, 4 ,5 ,6, 7, 8, 1, 2, 0])
+                df_expanded = df_expanded.reorder_levels([3, 4, 5, 6, 7, 8, 1, 2, 0])
 
                 all_dfs.append(df_expanded)
 
